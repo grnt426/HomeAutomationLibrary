@@ -1,0 +1,7 @@
+Timer   KEYWORD1
+MqttHandler   KEYWORD1
+WifiHandler   KEYWORD1
+resetTimer	KEYWORD2
+loop	KEYWORD2
+isTimerPassed   KEYWORD2
+registerTimer   KEYWORD2
