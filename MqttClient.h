@@ -7,6 +7,8 @@ public:
   MqttClient(const char* deviceId, void (*callback)(char*, byte*, unsigned int length), WifiHandler* handler, char* server);
   int loop();
   void publishMessage(const char* topic, const char* msg);
+  void bypassWait(int bypassWait);
+  void doNotSubscribe(int doNotSubscribe);
   
   const char* deviceId;
   int wifiOrigInit;
@@ -21,5 +23,7 @@ private:
   WifiHandler* _wifiHandler;
   char _msg[100];
   char* _mqttServer;
+  int _bypassWait;
+  int _doNotSubscribe;
 };
 #endif

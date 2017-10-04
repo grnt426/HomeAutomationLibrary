@@ -23,6 +23,8 @@ MqttClient::MqttClient(const char* dId, void (*callback)(char*, byte*, unsigned 
   deviceIdTopic = "ac/ac_beta";
   deviceSyncTopic = "ac/sync/ac_beta";
   overwriteDeviceStateTopic = "ac/overwrite/ac_beta";
+  _bypassWait = 0;
+  _doNotSubscribe = 0;
   
   client = new PubSubClient(handler->espClient);
   client->setServer(_mqttServer, 1883);
@@ -30,10 +32,26 @@ MqttClient::MqttClient(const char* dId, void (*callback)(char*, byte*, unsigned 
 }
 
 /**
-   Used to reconnect to the MQTT server, *NOT* the WiFi.
-*/
+ * For some devices, like the AC, it is OK to wait longer than needed for
+ * the wifi connection to settle before attempting the first MQTT connection.
+ * For other devices, such as the ambient sensor, the connection to MQTT should
+ * be attempted as soon as the wifi comes up.
+ */
+void MqttClient::bypassWait(int bypassWait) {
+  _bypassWait = bypassWait;
+}
+
+/**
+ * The ambient sensor does not care, nor will ever be awake, to receive messages
+ * from any client or server. Subscribing will only increase the amount of
+ * unnecessary network traffic on a battery operated device.
+ */
+void MqttClient::doNotSubscribe(int doNotSubscribe) {
+  _doNotSubscribe = doNotSubscribe;
+}
+
 int MqttClient::reconnect() {
-  if (timerMan.isTimerPassed(mqttRetryT)) {
+  if (_bypassWait || timerMan.isTimerPassed(mqttRetryT)) {
 
     Serial.print("Attempting MQTT connection...");
 
@@ -42,8 +60,11 @@ int MqttClient::reconnect() {
     // not listening on that port. Will test host off to see how long it takes.
     if (client->connect(deviceId)) {
       Serial.println("connected");
-      client->subscribe(deviceIdTopic);
-      client->subscribe(overwriteDeviceStateTopic);
+
+      if(_doNotSubscribe == 0) {
+        client->subscribe(deviceIdTopic);
+        client->subscribe(overwriteDeviceStateTopic);
+      }
 
       if (firstConn) {
         Serial.println("First MQTT connection, activating");

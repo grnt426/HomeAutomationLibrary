@@ -27,6 +27,9 @@ int WifiHandler::loop() {
       _wifiFinallyConn = 1;
       return 1;
     }
+    if(_wifiFinallyConn == 1) {
+      return 1;
+    }
   }
   return 0;
 }
